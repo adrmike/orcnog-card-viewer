@@ -97,7 +97,7 @@ class FancyDisplay {
                         wrpDrawn.addEventListener("click", (evt) => {
                             evt.stopPropagation();
                             // html.remove(); // Consider more specific or controlled removal if needed
-                            $(`.${MODULE_ID}`).remove(); // remove ALL
+                            document.querySelectorAll(`.${MODULE_ID}`).forEach(el => el.remove()); // remove ALL
                         });
 
                         _arcThis(wrpCardArcs, {

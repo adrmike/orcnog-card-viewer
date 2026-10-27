@@ -6,5 +6,5 @@ export const preloadTemplates = async function() {
         `modules/${MODULE_ID}/templates/card-viewer.html`
 	];
 
-	return loadTemplates(templatePaths);
+	return foundry.applications.handlebars.loadTemplates(templatePaths);
 }

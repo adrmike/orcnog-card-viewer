@@ -175,7 +175,9 @@ export function onRenderSettingsConfig(settingsConfig, html, user) {
      * This is fired when Foundry's settings window is opened.
      * Enable / disable interaction with various settings, depending on whether "Notify Typing" is enabled.
      */
-    const formGroups = html[0].querySelectorAll(`div.form-group[data-setting-id^="${MODULE_ID}"]`);
+    const root = html instanceof HTMLElement ? html : html[0];
+    // v13+ settings form groups no longer carry data-setting-id, so match on the inputs they contain.
+    const formGroups = root.querySelectorAll(`div.form-group[data-setting-id^="${MODULE_ID}"], div.form-group:has([name^="${MODULE_ID}."])`);
 
     // Add an "active" class to checked Display On ___ groups on check, to control visibility of other settings fields in that group.
     const displayOnGroups = [...formGroups].filter(fg => {

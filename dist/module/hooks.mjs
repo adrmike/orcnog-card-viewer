@@ -156,18 +156,14 @@ export default function registerHooks() {
 
     // View on card image click in a stack window
 
-    Hooks.on('renderApplication', (app, $html, data) => {
-        if (app instanceof CardsConfig !== true) return;
-        _registerCardImgClickInDeck($html, data);
-    });
-    Hooks.on('renderCardsConfig', (CardDeckConfig, html, data) => { // for v13 compatibility
-        _registerCardImgClickInDeck($(html), data);
+    Hooks.on('renderCardsConfig', (app, html) => {
+        _registerCardImgClickInDeck(html, app.document);
     });
 
     // View on card image click in chat messages
 
-    Hooks.on('renderChatMessage', (app, $html) => {
-        _registerCardImgClickInChat($html);
+    Hooks.on('renderChatMessageHTML', (message, html) => {
+        _registerCardImgClickInChat(html);
     });
 
     // Handles a card "Deal" action, or certain "Pass" actions
@@ -215,22 +211,28 @@ export function handleCardExchange (origin, destinations, context) {
 }
 
 // Register card icon click handler in Chat
-function _registerCardImgClickInDeck($html, data) {
+function _registerCardImgClickInDeck(html, stack) {
     
     // Exit early if necessary;
     if (!game.settings.get(MODULE_ID, 'enableCardIconClick')) return;
+    // ApplicationV2 re-renders into the same root element, so only bind once.
+    if (html.dataset[`${MODULE_SHORT}Bound`]) return;
+    html.dataset[`${MODULE_SHORT}Bound`] = 'true';
 
     // Register card icon click handler
-    $html.on(`click.${MODULE_SHORT}`, 'img.card-face, .cards img.face', (event) => {
-        const id = $(event.target).closest('li').data('card-id');
-        const deckCard = data.cards.find(c => c._id === id);
+    html.addEventListener('click', (event) => {
+        const img = event.target.closest('img.card-face, .cards img.face');
+        if (!img) return;
+        const id = img.closest('li')?.dataset.cardId;
+        const deckCard = stack.cards.get(id);
+        if (!deckCard) return;
         // Configs
         const faceDown = deckCard.face === null;
         const whisper = game.settings.get(MODULE_ID, 'enableWhisperCardTextToDM');
         const dramaticReveal = false;
         const shareToAll = false;
         // Set up viewer
-        if (id) new CardDealer({
+        new CardDealer({
             deckName: deckCard.source.name
         }).view([id], faceDown, whisper, dramaticReveal, shareToAll);
     });
@@ -238,25 +240,26 @@ function _registerCardImgClickInDeck($html, data) {
 }
 
 // Register card icon click handler in Chat
-function _registerCardImgClickInChat($html) {
+function _registerCardImgClickInChat(html) {
     // Exit early if necessary;
     if (!game.settings.get(MODULE_ID, 'enableCardIconClick')) return;
-    if (!$html.find(`.message-content .${MODULE_ID}-msg`).length) return;
+    const messages = html.querySelectorAll(`.message-content .${MODULE_ID}-msg`);
+    if (!messages.length) return;
 
-    const $message = $html.find(`.${MODULE_ID}-msg`);
-    $message.on(`click.${MODULE_SHORT}`, 'img.card-face', (event) => {
+    messages.forEach(message => message.addEventListener('click', (event) => {
+        if (!event.target.closest('img.card-face')) return;
         // Configs
         const faceDown = false;
         const whisper = false;
         const dramaticReveal = false;
         const shareToAll = false;
         // Set up viewer
-        const deckName = $(event.target).closest(`.${MODULE_ID}-msg`).data('deck');
-        const cardId = $(event.target).closest(`.${MODULE_ID}-msg`).data('card');
+        const deckName = message.dataset.deck;
+        const cardId = message.dataset.card;
         if (deckName && cardId) new CardDealer({
             deckName: deckName
         }).view([cardId], faceDown, whisper, dramaticReveal, shareToAll);
-    });
+    }));
 
     // TODO: Drag to canvas
     // $content.on('dragstart', '.dice-tray__button, .dice-tray__ad', (event) => {
