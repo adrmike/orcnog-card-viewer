@@ -1,6 +1,36 @@
 # Card Viewer
 #### A Module for Foundry VTT
 
+> **This is a fork.** [orcnog/orcnog-card-viewer](https://github.com/orcnog/orcnog-card-viewer) hasn't had a release since 0.4.1 in June 2025, and that version is starting to come apart on newer Foundry: the settings window throws on v13+, and clicking card images in chat relies on a hook that v15 removes. I use this module at my own table, so I patched it to keep it working. All the credit for the module goes to orcnog, this fork just keeps the lights on.
+
+## Installing this fork
+
+In Foundry's setup screen, go to **Add-on Modules**, click **Install Module**, paste this into the **Manifest URL** field at the bottom, and click **Install**:
+
+```
+https://raw.githubusercontent.com/adrmike/orcnog-card-viewer/master/dist/module.json
+```
+
+It uses the same module id as upstream, so installing it over orcnog's 0.4.1 replaces it in place and your settings and imported macros carry over. It still needs [socketlib](https://foundryvtt.com/packages/socketlib).
+
+### What's different from upstream 0.4.1
+
+* Clicking a card image in a chat whisper opens the viewer again, using `renderChatMessageHTML` instead of the `renderChatMessage` hook (deprecated in v13, removed in v15).
+* Clicking a card in a deck, hand, or pile window works on v13+ sheets and opens exactly one viewer. It used to be able to stack up click handlers when the window re-rendered.
+* The settings window no longer throws on open in v13+, and the collapsible display-option groups work again.
+* The code paths above no longer use jQuery, and templates load through the namespaced `foundry.applications.handlebars.loadTemplates`.
+* The manifest declares a v13 minimum and is verified on 14.369, which also clears the "unknown keys" warning on the setup screen.
+
+### Tested on
+
+Foundry 14.369 with dnd5e 6.0.6: the settings window, clicking cards in a deck, and clicking a card in a chat whisper. Nothing older than v13 has been tested, which is why the minimum is 13. Like upstream it shouldn't care about the game system, but I've only run it with dnd5e.
+
+### Known gaps
+
+The viewer window itself is still built on Foundry's V1 `Application`, so Foundry logs "The V1 Application framework is deprecated" each time it opens. It works fine today, and porting it is next on the list before Foundry actually removes V1.
+
+This fork is maintained for my own game, so support is best effort.
+
 ## Purpose
 After setting up a deck of many things in one of my games, I found there wasn't great out-of-the-box way to simply view and share a card.  Taking visual inspiration from a popular 5e toolset, I ported their card viewer UX over to the Foundry system.  Now, I can view cards beautifully in a 3d-feel viewer, flip the cards over to view the card art or read the card stats, and even share this beautiful view with my players on the fly.
 
@@ -8,7 +38,7 @@ After setting up a deck of many things in one of my games, I found there wasn't 
 [socketlib](https://foundryvtt.com/packages/socketlib)
 
 ## Compatibility
-This was built on Foundry v11 and, based on initial user feedback, appears to be currently mostly compatible with v10 but may have some bugs. As for compatibility with other modules, none have been tested, but the functionality of this mod doesn't mess with the core card system and only serves to enhance the UI in exactly one way, so I doubt there will be many conflicts. If you come across any issues in v10 or with mother modules, please feel free to log in the github [issues section](https://github.com/orcnog/orcnog-card-viewer/issues).
+Upstream was built on Foundry v11 and verified through v13. This fork targets v13 and v14 (see [Installing this fork](#installing-this-fork) above). As for compatibility with other modules, none have been tested, but the functionality of this mod doesn't mess with the core card system and only serves to enhance the UI in exactly one way, so I doubt there will be many conflicts.
 
 ## Demo
 
@@ -343,3 +373,6 @@ Updates compatibility to v13. Adds ability to draw multiple cards via macro / AP
 
 ## v0.4.1
 Update macros with UI notifications when Card Viewer module is not active.
+
+## v0.4.2 (adrmike fork)
+Foundry v13/v14 fixes on top of 0.4.1: chat card clicks use `renderChatMessageHTML` (the old hook is removed in v15), deck/hand/pile card clicks work on v13+ sheets and only open one viewer, the settings window no longer throws and its collapsible groups work again, no jQuery in those paths, and the manifest now declares v13 minimum / verified 14.369. See the fork notice at the top.
